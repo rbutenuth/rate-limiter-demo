@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:rate-limiter="http://www.mulesoft.org/schema/mule/rate-limiter"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="03794e69-7431-43bf-9435-4e4bfce00323" >
+		<http:listener-connection host="0.0.0.0" port="8080" />
+	</http:listener-config>
+
+	<rate-limiter:rate-limiter-config name="Rate_limiter" minTimeBetweenOperations="10" unit="SECONDS" doc:name="Rate-limiter Rate limiter" doc:id="c8f25288-f7e1-4975-85c8-2e90f7d266a5" >
+		<rate-limiter:buffer-ops >
+			<rate-limiter:unbounded-buffer />
+		</rate-limiter:buffer-ops>
+	</rate-limiter:rate-limiter-config>
+
+	<rate-limiter:rate-limiter-config name="Rate_limiter_100ms" minTimeBetweenOperations="100" unit="MILLISECONDS" doc:name="Rate-limiter Rate limiter" doc:id="7966dfbd-f276-4792-92f3-ada21f706524" >
+		<rate-limiter:buffer-ops >
+			<rate-limiter:unbounded-buffer />
+		</rate-limiter:buffer-ops>
+	</rate-limiter:rate-limiter-config>
+
+	<http:request-config name="HTTP_Request_configuration-localhost-8080" doc:name="HTTP Request configuration" doc:id="3d2b8075-75d8-40eb-9a52-7fcc3ae072e7" >
+		<http:request-connection host="localhost" port="8080" />
+	</http:request-config>
+
+</mule>

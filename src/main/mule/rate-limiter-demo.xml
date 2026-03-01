@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:rate-limiter="http://www.mulesoft.org/schema/mule/rate-limiter" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<flow name="rate-limiter-demo" doc:id="2d1276a0-416a-467a-95b7-ceb04fcd923a" >
+		<http:listener doc:name="/rate" doc:id="b13ec34d-4e24-4a96-b3f5-a2896283fbeb" config-ref="HTTP_Listener_config" path="/rate"/>
+		<logger level="INFO" doc:name="before rate-limit" doc:id="19b734e9-b521-44cf-b91e-1ce8a2874b71" message="before rate-limit" category="rate-limiter-demo"/>
+		<rate-limiter:limit-rate doc:name="Limit rate" doc:id="c461b7d3-59d2-4ac1-b5de-c73393617803" config-ref="Rate_limiter"/>
+		<logger level="INFO" doc:name="after rate-limit" doc:id="429b705a-e341-48be-9ebf-0a3157013c1b" message="after-rate-limit" category="rate-limiter-demo"/>
+		<ee:transform doc:name="done" doc:id="811e87cd-2b19-4c72-848f-4907153c6a40">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Rate limit done!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<flow name="delay-demo" doc:id="888e15a3-c19e-417c-9ee7-4c89d5a59813" >
+		<http:listener doc:name="/delay" doc:id="d2dd2a01-291e-426b-a801-fdbde8890b11" config-ref="HTTP_Listener_config" path="/delay"/>
+		<logger level="INFO" doc:name="before delay" doc:id="e0c6ba07-e1d5-4174-8845-346f04416c02" message="before delay" category="delay-demo"/>
+		<rate-limiter:fixed-delay delay="5" unit="SECONDS" doc:name="Fixed delay" doc:id="ddfca065-b008-4101-8a08-65565a6fb30f" />
+		<logger level="INFO" doc:name="after delay" doc:id="937e96db-3ea9-4436-b158-fcfc36e2a294" message="after delay" category="delay-demo"/>
+		<ee:transform doc:name="done" doc:id="8ea43709-6db7-43df-9669-48aa9ea7ce7f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Delay done!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+	<flow name="test-rate-limit-caller" doc:id="567841a3-1681-4340-b072-915a8270a149" >
+		<http:listener doc:name="/test-rate-limit" doc:id="4cd3a31f-7849-4945-b460-40a6b3001575" config-ref="HTTP_Listener_config" path="/test-rate-limit"/>
+		<flow-ref doc:name="test-rate-limit" doc:id="ca552322-d8e9-40ca-ab12-ac618bfd289d" name="test-rate-limit"/>
+		<ee:transform doc:name="java2json" doc:id="8906bb41-0401-4088-87e2-94e499d5aac3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	
+	<flow name="test-delay-caller" doc:id="c0331ab0-8ec0-49ff-ad38-9ab55255d25b" >
+		<http:listener doc:name="/test-delay" doc:id="a5f962cf-6ce9-42a7-a1da-ecd87331c2d9" config-ref="HTTP_Listener_config" path="/test-delay"/>
+		<flow-ref doc:name="test-delay" doc:id="b0b24c09-6727-476e-8a2f-144bc4cd2385" name="test-delay"/>
+		<ee:transform doc:name="java2json" doc:id="431db47e-1a65-4dde-9489-d7fc4a9a5ee2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	
+	</flow>
+
+
+</mule>

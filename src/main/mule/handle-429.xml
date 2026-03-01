@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:rate-limiter="http://www.mulesoft.org/schema/mule/rate-limiter"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<flow name="trigger-429" doc:id="5b69d7a6-0271-4c3b-9263-b4aa2a4043b9" >
+		<http:listener doc:name="/trigger-429" doc:id="144495a3-92f2-4ba3-ae81-3990a2bb602d" config-ref="HTTP_Listener_config" path="/trigger-429"/>
+		<rate-limiter:handle-429 doc:name="Handle 429" doc:id="3d5f3e95-359d-47cc-832a-c2b65f92fe62" id="42" waitTimeExpression='#[((headers."retry-after" default "0" as Number) + random() * 3) * 1000]'>
+			<http:request method="GET" doc:name="GET /return-429" doc:id="d0cc4eac-cbbf-48ab-9a79-0ff4dcfe03c9" config-ref="HTTP_Request_configuration-localhost-8080" path="/return-429">
+				<http:response-validator >
+					<http:success-status-code-validator values="200,429" />
+				</http:response-validator>
+			</http:request>
+			<ee:transform doc:name="set attributes and message" doc:id="4b3135da-f75e-47a0-b37b-ada3c8616356" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Haha!"
+}]]></ee:set-payload>
+					<ee:set-attributes ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	statusCode: 429,
+	headers: {
+		"retry-after": 1
+	}
+}]]></ee:set-attributes>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="/trigger-429" doc:id="fe5f9aa1-c190-4062-8b52-8972728ea635" message="/trigger-429" category="trigger-429" />
+		</rate-limiter:handle-429>
+	</flow>
+
+	<flow name="return-429" doc:id="72b38534-1eed-4204-98ad-a63acf3c5f5f" >
+		<http:listener doc:name="/return-429" doc:id="e05f56c6-847e-4ab2-81bd-2eccf4d8b975" config-ref="HTTP_Listener_config" path="/return-429">
+			<http:response statusCode="429" >
+				<http:headers ><![CDATA[#[{
+	"retry-after": 2
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<logger level="INFO" doc:name="flow return-429 called" doc:id="cb39e30a-524e-4ed7-ae92-99ae748c3cce" message="flow return-429 called" category="return-429"/>
+		<ee:transform doc:name="message Huhu!" doc:id="6381e63e-6514-44b2-8b20-e5021c3e4c81" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "Huhu!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	
+</mule>
