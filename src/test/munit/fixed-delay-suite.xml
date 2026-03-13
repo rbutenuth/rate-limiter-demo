@@ -3,15 +3,15 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 
 	<munit:config name="fixed-delay-suite.xml"/>
 
-	<rate-limiter:rate-limiter-config name="Rate_limiter_unbounded_100ms" minTimeBetweenOperations="100" unit="MILLISECONDS" doc:name="Rate-limiter Rate limiter">
+	<rate-limiter:rate-limiter-config name="Rate_limiter_unbounded_100ms" minTimeBetweenOperations="100" unit="MILLISECONDS" doc:name="Unbounded">
 		<rate-limiter:buffer-ops >
 			<rate-limiter:unbounded-buffer />
 		</rate-limiter:buffer-ops>
 	</rate-limiter:rate-limiter-config>
 
-	<rate-limiter:rate-limiter-config name="Rate_limiter_bounded_100ms_buffer_5" minTimeBetweenOperations="100" unit="MILLISECONDS" doc:name="Rate-limiter Rate limiter">
+	<rate-limiter:rate-limiter-config name="Rate_limiter_bounded_100ms_buffer_2" minTimeBetweenOperations="100" unit="MILLISECONDS" doc:name="Bounded, size 2">
 		<rate-limiter:buffer-ops >
-			<rate-limiter:bounded-buffer bufferSize="5" />
+			<rate-limiter:bounded-buffer bufferSize="2" />
 		</rate-limiter:buffer-ops>
 	</rate-limiter:rate-limiter-config>
 
@@ -189,6 +189,25 @@ payload ++ {
 			<munit-tools:assert-that doc:name="a -&gt; b" doc:id="3c7e0082-bbba-4a6c-a31a-3c36b13112d8" message="a -&gt;  b" expression="#[payload.b - payload.a]" is="#[MunitTools::lessThan(50)]"/>
 			<munit-tools:assert-that doc:name="b -&gt; c" doc:id="fc7972e4-cb38-4d36-8984-0501af9d27d7" message="b -&gt; c" expression="#[payload.c - payload.b]" is="#[MunitTools::greaterThan(90)]" />
 			<munit-tools:assert-that doc:name="c -&gt; d" doc:id="87b9a9c3-f6b8-401a-949f-d89dae983b2d" message="c -&gt; d" expression="#[payload.d - payload.c]" is="#[MunitTools::greaterThan(90)]" />
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="test-ratelimit-overflow-error" doc:id="5263b2f6-5910-4f74-866b-6b7483726b96" >
+		<munit:execution >
+			<try doc:name="Try" doc:id="df99eefe-01ec-456b-bee2-685abfbf9ca3" >
+				<parallel-foreach doc:name="Parallel For Each" doc:id="02c61d66-9934-40bb-b156-b26c8670507a" collection="#[to(1, 10)]">
+					<rate-limiter:limit-rate doc:name="Limit rate - Buffer " doc:id="af877f81-56b4-462c-9d3d-7f987ce731b1" config-ref="Rate_limiter_bounded_100ms_buffer_2" />
+				</parallel-foreach>
+				<set-payload value="OK" doc:name="OK" doc:id="cb188ca8-acc3-4291-8760-7de4f4288a9f" />
+				<error-handler >
+					<on-error-continue enableNotifications="false" logException="false" doc:name="On Error Continue2" doc:id="4bb51ae3-3f98-48c4-943a-b2dd8afdd358" type="*:*">
+						<set-payload value="ERROR" doc:name="ERROR" doc:id="b4fbcaf0-96a0-426b-84ba-000474e9494f" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="ERROR" doc:id="d9aae330-1234-4d0c-8521-1fe182c965a2" actual="#[payload]" expected="ERROR" message="Missing error"/>
 		</munit:validation>
 	</munit:test>
 
