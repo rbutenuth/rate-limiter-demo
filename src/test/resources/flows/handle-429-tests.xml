@@ -10,26 +10,6 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd">
 
-	<!-- Use different IDs in the test cases, otherwise they can disturb each other! -->
-	
-	<flow name="test-missing-attributes">
-		<rate-limiter:handle-429 doc:name="Handle 429"
-			id="missing-attributes" numberOfRetries="5"
-			waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]'>
-				<set-payload value="#[output application/java --- 42]" doc:name="answer" />
-		</rate-limiter:handle-429>
-	</flow>
-
-	<flow name="test-unexpected-attributes">
-		<rate-limiter:handle-429 doc:name="Handle 429"
-			id="unexpected-attributes" numberOfRetries="5"
-			waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]'>
-			<rate-limiter:set-attributes
-				payload="#[payload]" 
-				attributes="#['foo']"/>
-		</rate-limiter:handle-429>
-	</flow>
-
 	<flow name="test-error-in-scope">
 		<rate-limiter:handle-429 doc:name="Handle 429"
 			id="error-in-scope" numberOfRetries="5"

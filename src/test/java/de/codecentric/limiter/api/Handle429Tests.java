@@ -2,29 +2,10 @@ package de.codecentric.limiter.api;
 
 public class Handle429Tests {
 
-// "handle-429-tests.xml";
-
-//	public void clearResponseAttributeList() {
-//		TestHttpResponseAttributesFactory.clear();
-//	}
-	
-	// Use different IDs in the test cases, otherwise they can disturb each other!
-	
-//	public void messageProcessorReturningNoAttributes() throws Exception {
-//		Event event = flowRunner("test-missing-attributes").run();
-//		Number payload = (Number) event.getMessage().getPayload().getValue();
-//		assertEquals(42, payload.intValue());
-//	}
-
-//	public void messageProcessorReturningUnexpectedAttributes() throws Exception {
-//		Exception exception = flowRunner("test-unexpected-attributes").runExpectingException();
-//		// attributes contains the String "foo"
-//		assertTrue(exception.getMessage().contains("evaluating expression: \"attributes.statusCode\""));
-//	}
 
 //	public void errorInScope() throws Exception {
 //		Exception exception = flowRunner("test-error-in-scope").runExpectingException();
-//		// APP:B�M is part of exceptoin.getInfo(), but that's not accessible here due to class loading restrictions.
+//		// APP:BäM is part of exceptoin.getInfo(), but that's not accessible here due to class loading restrictions.
 //		assertEquals("An error occurred.", exception.getMessage());
 //	}
 

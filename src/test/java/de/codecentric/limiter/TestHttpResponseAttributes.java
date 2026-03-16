@@ -3,6 +3,10 @@ package de.codecentric.limiter;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Duck type for the Mule server class HttpResponseAttributes. 
+ * It's ok to have a different class, as long as the two getters are there. 
+ */
 public class TestHttpResponseAttributes {
 	private final int statusCode;
 	private final Map<String, String> headers;

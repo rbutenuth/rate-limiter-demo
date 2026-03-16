@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:rate-limiter="http://www.mulesoft.org/schema/mule/rate-limiter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+
+	<munit:config name="handle-429-suite.xml"/>
+
+	<munit:test description="Test" doc:id="2f359441-7227-4aa4-bcf7-676d9e0f0889" name="missing-attributes-should-work">
+		<munit:execution>
+			<rate-limiter:handle-429 doc:id="0421bcf7-0d5d-4dc6-b73c-bd85359abbe9" doc:name="Handle 42" id="missing-attributes" waitTimeExpression="#[(headers.&quot;retry-after&quot; default &quot;0&quot;) as Number * 1000]">
+				<set-payload doc:id="dd4b14b5-d001-44b3-b630-a184a73a3b18" doc:name="answer" value="#[output application/java --- 42]"/>
+				<logger doc:id="fa460d83-a948-481b-b7cc-b4534cc6afe2" doc:name="No attributes present is ok" level="INFO" message="No attributes present is ok"/>
+			</rate-limiter:handle-429>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:id="0158de8d-5cc5-4096-81ad-b7a30ded1ddc" doc:name="42" expression="#[payload]" is="#[MunitTools::equalTo(42)]" message="Payload should contain the answer."/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="unexpected-attribute-causes-error" doc:id="1a726040-fa38-4148-9191-4727451177a1" >
+		<munit:execution >
+			<try doc:name="Try" doc:id="65b5b2b3-5b34-40d2-be16-aa772788b60b">
+					<rate-limiter:handle-429 doc:name="Handle non map attributes" doc:id="eb501a6f-1139-4f6e-a487-1db6e08643c5" id="unexpected-attributes" waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]'>
+				<ee:transform doc:name="attributes are not a map" doc:id="c7a013c0-d831-4385-94af-36f8a1856024">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+"does not matter"]]></ee:set-payload>
+						<ee:set-attributes><![CDATA[%dw 2.0
+output application/java
+---
+"foo is not a map"]]></ee:set-attributes>
+					</ee:message>
+				</ee:transform>
+					<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="96c2383b-c9a9-428a-9a61-e5ab776fe3ad" />
+			</rate-limiter:handle-429>
+					<error-handler>
+						<on-error-continue enableNotifications="false" logException="false" doc:name="MULE:EXPRESSION" doc:id="83f692ad-776d-40da-b4c2-0f36026571be" type="MULE:EXPRESSION">
+							<set-payload value="EXPECTED EXCEPTION" doc:name="EXPECTED EXCEPTION" doc:id="2ac73e21-14c1-4540-ac6f-c9016155e5de" />
+						</on-error-continue>
+					</error-handler>
+				</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="cad266fc-8e08-4de8-a024-f5deb80f35c1" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
+		</munit:validation>
+	</munit:test>
+
+</mule>
