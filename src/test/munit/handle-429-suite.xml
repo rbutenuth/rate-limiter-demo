@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:rate-limiter="http://www.mulesoft.org/schema/mule/rate-limiter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools" xmlns:rate-limiter="http://www.mulesoft.org/schema/mule/rate-limiter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="   http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd   http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
 
 	<munit:config name="handle-429-suite.xml"/>
 
@@ -59,6 +60,49 @@ output application/java
 		</munit:execution>
 		<munit:validation >
 			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="84960ee2-118b-4a4e-8eca-b411aa3c5186" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="wait-time-is-not-a-number" doc:id="8f4d8894-ea28-4c68-b510-75d8f4834b0d" >
+		<munit:execution >
+			<try doc:name="Try" doc:id="eb05b96b-f570-4864-983e-c2b81ae36caa" >
+				<java:invoke-static doc:name="TestHttpResponseAttributesFactory" doc:id="fd9df0c6-3de6-4034-80c3-8e52b8514052" class="de.codecentric.limiter.TestHttpResponseAttributesFactory" method="addEntry(int,java.lang.String[])">
+					<java:args ><![CDATA[#[{
+	statusCode: 429,
+	headers: [ "retry-after", "not-a-string"]
+}]]]></java:args>
+				</java:invoke-static>
+				<rate-limiter:handle-429 doc:name="Handle 4" doc:id="414e70f1-ff30-425d-9801-68c50ab850af" id="error-in-scope" waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]' >
+					<ee:transform doc:name="fetch attributes" doc:id="a376d766-f7e6-4027-b4e5-d0588860ce73" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"does not matter"]]></ee:set-payload>
+							<ee:set-attributes ><![CDATA[%dw 2.0
+import java!de::codecentric::limiter::TestHttpResponseAttributesFactory
+output application/java
+
+var testAttributes = TestHttpResponseAttributesFactory::fetchAttributes() 
+---
+{
+	statusCode: testAttributes.statusCode,
+	headers: testAttributes.headers
+}
+]]></ee:set-attributes>
+						</ee:message>
+					</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="bb9abbde-dfb7-490a-9c42-f9bad305919a" />
+				</rate-limiter:handle-429>
+				<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="e47bf0b9-b511-4548-bc3c-dbcce536d8bb" />
+				<error-handler >
+					<on-error-continue enableNotifications="false" logException="false" doc:name="MULE:EXPRESSION" doc:id="d2d45e0b-4077-4274-8d89-fa7af950910f" type="MULE:EXPRESSION" >
+						<set-payload value="EXPECTED EXCEPTION" doc:name="EXPECTED EXCEPTION" doc:id="1dab80e9-844d-401d-9105-c3c7b6149382" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="4638d9c0-3500-4fbe-9352-c4c7be1a1b00" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
 		</munit:validation>
 	</munit:test>
 

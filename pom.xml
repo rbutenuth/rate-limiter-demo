@@ -15,7 +15,7 @@
 		<app.runtime>4.7.0</app.runtime>
 		<mule.maven.plugin.version>4.7.0</mule.maven.plugin.version>
 		<munit.version>3.7.0</munit.version>
-        <junit.version>5.14.3</junit.version>
+		<junit.version>5.14.3</junit.version>
 	</properties>
 
 	<build>
@@ -54,14 +54,25 @@
 					</coverage>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.10.1</version>
+				<configuration>
+					<compilerArgs>
+						<args>-parameters</args>
+					</compilerArgs>
+					<target>17</target>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
 	<dependencies>
 		<dependency>
-			<groupId>de.codecentric.mule.modules</groupId>
+			<groupId>io.github.rbutenuth.mule-modules</groupId>
 			<artifactId>rate-limiter</artifactId>
-			<version>1.2.2-SNAPSHOT</version>
+			<version>1.2.4-SNAPSHOT</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>
@@ -105,6 +116,12 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>org.mule.module</groupId>
+			<artifactId>mule-java-module</artifactId>
+			<version>2.0.4</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
 	</dependencies>
 
 	<repositories>

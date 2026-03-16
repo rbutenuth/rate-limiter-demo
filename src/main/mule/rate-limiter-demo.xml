@@ -41,34 +41,5 @@ output application/json
 		</ee:transform>
 	</flow>
 
-	<flow name="test-rate-limit-caller" doc:id="567841a3-1681-4340-b072-915a8270a149" >
-		<http:listener doc:name="/test-rate-limit" doc:id="4cd3a31f-7849-4945-b460-40a6b3001575" config-ref="HTTP_Listener_config" path="/test-rate-limit"/>
-		<flow-ref doc:name="test-rate-limit" doc:id="ca552322-d8e9-40ca-ab12-ac618bfd289d" name="test-rate-limit"/>
-		<ee:transform doc:name="java2json" doc:id="8906bb41-0401-4088-87e2-94e499d5aac3" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload
-]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-	</flow>
-	
-	<flow name="test-delay-caller" doc:id="c0331ab0-8ec0-49ff-ad38-9ab55255d25b" >
-		<http:listener doc:name="/test-delay" doc:id="a5f962cf-6ce9-42a7-a1da-ecd87331c2d9" config-ref="HTTP_Listener_config" path="/test-delay"/>
-		<flow-ref doc:name="test-delay" doc:id="b0b24c09-6727-476e-8a2f-144bc4cd2385" name="test-delay"/>
-		<ee:transform doc:name="java2json" doc:id="431db47e-1a65-4dde-9489-d7fc4a9a5ee2" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
----
-payload
-]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-	
-	</flow>
-
 
 </mule>
