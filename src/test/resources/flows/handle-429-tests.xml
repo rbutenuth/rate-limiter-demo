@@ -10,14 +10,6 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/rate-limiter http://www.mulesoft.org/schema/mule/rate-limiter/current/mule-rate-limiter.xsd">
 
-	<flow name="test-error-in-scope">
-		<rate-limiter:handle-429 doc:name="Handle 429"
-			id="error-in-scope" numberOfRetries="5"
-			waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]'>
-			<raise-error doc:name="Raise error"  type="APP:BÄM"/>
-		</rate-limiter:handle-429>
-	</flow>
-
 	<flow name="test-wait-time-not-a-number-but-string">
 		<rate-limiter:handle-429 doc:name="Handle 429"
 			id="wait-time-not-a-number-but-string" numberOfRetries="5"

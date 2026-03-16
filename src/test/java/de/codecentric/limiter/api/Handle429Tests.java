@@ -3,12 +3,6 @@ package de.codecentric.limiter.api;
 public class Handle429Tests {
 
 
-//	public void errorInScope() throws Exception {
-//		Exception exception = flowRunner("test-error-in-scope").runExpectingException();
-//		// APP:BäM is part of exceptoin.getInfo(), but that's not accessible here due to class loading restrictions.
-//		assertEquals("An error occurred.", exception.getMessage());
-//	}
-
 //	public void notANumberButString() throws Exception {
 //		TestHttpResponseAttributesFactory.addEntry(429, "retry-after-ms", "100");
 //		Exception exception = flowRunner("test-wait-time-not-a-number-but-string").runExpectingException();

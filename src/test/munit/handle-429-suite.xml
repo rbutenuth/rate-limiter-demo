@@ -30,9 +30,9 @@ output application/java
 "foo is not a map"]]></ee:set-attributes>
 					</ee:message>
 				</ee:transform>
-					<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="96c2383b-c9a9-428a-9a61-e5ab776fe3ad" />
 			</rate-limiter:handle-429>
-					<error-handler>
+					<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="96c2383b-c9a9-428a-9a61-e5ab776fe3ad" />
+				<error-handler>
 						<on-error-continue enableNotifications="false" logException="false" doc:name="MULE:EXPRESSION" doc:id="83f692ad-776d-40da-b4c2-0f36026571be" type="MULE:EXPRESSION">
 							<set-payload value="EXPECTED EXCEPTION" doc:name="EXPECTED EXCEPTION" doc:id="2ac73e21-14c1-4540-ac6f-c9016155e5de" />
 						</on-error-continue>
@@ -41,6 +41,24 @@ output application/java
 		</munit:execution>
 		<munit:validation >
 			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="cad266fc-8e08-4de8-a024-f5deb80f35c1" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
+		</munit:validation>
+	</munit:test>
+	<munit:test name="error-in-scope" doc:id="794a50f7-71ac-45ab-bcf8-89cc7d64e609" >
+		<munit:execution >
+			<try doc:name="Try" doc:id="70b84fcb-1500-43ae-985a-ea6d0d4434a4" >
+				<rate-limiter:handle-429 doc:name="Handle 42" doc:id="52b17917-dadf-4032-814c-eef8a083fdfc" id="error-in-scope" waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]' >
+					<raise-error doc:name="Raise error" doc:id="e3250241-22c8-43be-83b0-d0d3bec78e09" type="APP:BÄM" />
+				</rate-limiter:handle-429>
+				<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="7768504d-f842-4bce-8ce5-f47a67bb98e4" />
+				<error-handler >
+					<on-error-continue enableNotifications="false" logException="false" doc:name="APP:BÄM" doc:id="65ca7b20-9edc-41d4-9396-9897052fec41" type="APP:BÄM" >
+						<set-payload value="EXPECTED EXCEPTION" doc:name="EXPECTED EXCEPTION" doc:id="dc3c7947-a28e-4453-84b2-9ffa6ba3613f" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="84960ee2-118b-4a4e-8eca-b411aa3c5186" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
 		</munit:validation>
 	</munit:test>
 
