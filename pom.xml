@@ -72,7 +72,7 @@
 		<dependency>
 			<groupId>io.github.rbutenuth.mule-modules</groupId>
 			<artifactId>rate-limiter</artifactId>
-			<version>1.2.4-SNAPSHOT</version>
+			<version>1.2.4</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>
