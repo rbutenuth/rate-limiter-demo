@@ -81,17 +81,11 @@ output application/java
 							<ee:set-attributes ><![CDATA[%dw 2.0
 import java!de::codecentric::limiter::TestHttpResponseAttributesFactory
 output application/java
-
-var testAttributes = TestHttpResponseAttributesFactory::fetchAttributes() 
 ---
-{
-	statusCode: testAttributes.statusCode,
-	headers: testAttributes.headers
-}
+TestHttpResponseAttributesFactory::fetchAttributes() 
 ]]></ee:set-attributes>
 						</ee:message>
 					</ee:transform>
-					<logger level="INFO" doc:name="Logger" doc:id="bb9abbde-dfb7-490a-9c42-f9bad305919a" />
 				</rate-limiter:handle-429>
 				<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="e47bf0b9-b511-4548-bc3c-dbcce536d8bb" />
 				<error-handler >
