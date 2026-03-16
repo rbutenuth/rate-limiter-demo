@@ -65,7 +65,7 @@ output application/java
 	<munit:test name="wait-time-is-not-a-number" doc:id="8f4d8894-ea28-4c68-b510-75d8f4834b0d" >
 		<munit:execution >
 			<try doc:name="Try" doc:id="eb05b96b-f570-4864-983e-c2b81ae36caa" >
-				<java:invoke-static doc:name="TestHttpResponseAttributesFactory" doc:id="fd9df0c6-3de6-4034-80c3-8e52b8514052" class="de.codecentric.limiter.TestHttpResponseAttributesFactory" method="addEntry(int,java.lang.String[])">
+				<java:invoke-static doc:name="retry-after not a number" doc:id="fd9df0c6-3de6-4034-80c3-8e52b8514052" class="de.codecentric.limiter.TestHttpResponseAttributesFactory" method="addEntry(int,java.lang.String[])">
 					<java:args ><![CDATA[#[{
 	statusCode: 429,
 	headers: [ "retry-after", "not-a-string"]
@@ -97,6 +97,162 @@ TestHttpResponseAttributesFactory::fetchAttributes()
 		</munit:execution>
 		<munit:validation >
 			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="4638d9c0-3500-4fbe-9352-c4c7be1a1b00" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="no-wait" doc:id="6bc48509-52d3-4b06-9f2c-3bb936fa47ca" >
+		<munit:execution >
+		<java:invoke-static method="addEntry(int,java.lang.String[])" doc:name="statusCode = 200" doc:id="0e5a8584-5564-4d5a-9800-7fc566a64336" class="de.codecentric.limiter.TestHttpResponseAttributesFactory">
+				<java:args><![CDATA[#[{
+	statusCode: 200,
+	headers: []
+}]]]></java:args>
+			</java:invoke-static>
+			<set-payload value="#[%dw 2.0
+&#10;output application/java
+&#10;import * from dw::util::Timer
+&#10;---
+&#10;{
+&#10;	a: currentMilliseconds()
+&#10;}]" doc:name="a: currentMilliseconds()" />
+		<rate-limiter:handle-429 doc:name="Handle 429"
+			id="no-wait" numberOfRetries="5"
+			waitTimeExpression='#[(headers."retry-after" default "0") as Number * 1000]'>
+			<ee:transform doc:name="set attributes" doc:id="17dab538-2d98-4a25-946e-1e173b53beb6" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+						<ee:set-attributes ><![CDATA[%dw 2.0 
+import java!de::codecentric::limiter::TestHttpResponseAttributesFactory
+output application/java
+---
+TestHttpResponseAttributesFactory::fetchAttributes()
+]]></ee:set-attributes>
+					</ee:message>
+				</ee:transform>
+		</rate-limiter:handle-429>
+		<set-payload value="#[%dw 2.0
+&#10;output application/java
+&#10;import * from dw::util::Timer
+&#10;---
+&#10;payload ++ {
+&#10;	b: currentMilliseconds()
+&#10;}]" doc:name="payload ++ b: currentMilliseconds()" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="less than 100ms" doc:id="6353b74d-9d02-4afc-baf6-6943f17a35da" message="Too slow" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+(payload.b - payload.a) must beLowerThan(100)]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="one-wait" doc:id="97cc498d-52b4-43dc-ae87-b3a0034e2ee8" >
+		<munit:execution >
+		<java:invoke-static method="addEntry(int,java.lang.String[])" doc:name="retry-after 100 ms" doc:id="459ace16-abbf-458e-b704-9fd608d93e16" class="de.codecentric.limiter.TestHttpResponseAttributesFactory">
+				<java:args><![CDATA[#[{
+	statusCode: 429,
+	headers: [ "retry-after-ms", 100]
+}]]]></java:args>
+			</java:invoke-static>
+			<java:invoke-static method="addEntry(int,java.lang.String[])" doc:name="statusCode = 20" doc:id="13ba2c9e-1bdc-4fdf-9595-1ec09b81ebfb" class="de.codecentric.limiter.TestHttpResponseAttributesFactory">
+				<java:args><![CDATA[#[{
+	statusCode: 200,
+	headers: []
+}]]]></java:args>
+			</java:invoke-static>
+			<set-payload value="#[%dw 2.0
+&#10;output application/java
+&#10;import * from dw::util::Timer
+&#10;---
+&#10;{
+&#10;	a: currentMilliseconds()
+&#10;}]" doc:name="a: currentMilliseconds()" />
+		<!-- Expression returns a String to test the conversion. -->
+		<rate-limiter:handle-429 doc:name="Handle 429"
+			id="one-wait" numberOfRetries="1"
+			waitTimeExpression='#[(headers."retry-after-ms" default "0") as String]'>
+				<ee:transform doc:name="set attributes" doc:id="b2ae6005-242f-433d-816b-76134729107a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+						<ee:set-attributes ><![CDATA[%dw 2.0 
+import java!de::codecentric::limiter::TestHttpResponseAttributesFactory
+output application/java
+---
+TestHttpResponseAttributesFactory::fetchAttributes()
+]]></ee:set-attributes>
+					</ee:message>
+				</ee:transform>
+		</rate-limiter:handle-429>
+		<set-payload value="#[%dw 2.0
+&#10;output application/java
+&#10;import * from dw::util::Timer
+&#10;---
+&#10;payload ++ {
+&#10;	b: currentMilliseconds()
+&#10;}]" doc:name="payload ++ b: currentMilliseconds()" />
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="&lt; 1000ms" doc:id="24f43fb2-29e4-433e-9900-a000e1885efa" message="Too slow" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+(payload.b - payload.a) must beLowerThan(1000)]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:assert doc:name="&gt; 100ms" doc:id="4e045760-9730-4c9b-a091-6afb04f608f9" message="Too fast" >
+				<munit-tools:that ><![CDATA[#[import * from dw::test::Asserts 
+ ---
+(payload.b - payload.a) must beGreaterThan(100)]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="retries-exhausted" doc:id="b198e744-d993-4bd3-89cf-e14e4edc6119" >
+		<munit:execution >
+			<java:invoke-static method="addEntry(int,java.lang.String[])" doc:name="retry-after 100 ms1" doc:id="d7507663-64e8-48df-82f8-ae8b9e78e592" class="de.codecentric.limiter.TestHttpResponseAttributesFactory">
+				<java:args><![CDATA[#[{
+	statusCode: 429,
+	headers: [ "retry-after-ms", 100]
+}]]]></java:args>
+			</java:invoke-static>
+			<java:invoke-static method="addEntry(int,java.lang.String[])" doc:name="retry-after 100 ms" doc:id="7ab1e3c3-cc85-47a5-a894-f27a04999614" class="de.codecentric.limiter.TestHttpResponseAttributesFactory">
+				<java:args><![CDATA[#[{
+	statusCode: 429,
+	headers: [ "retry-after-ms", 100]
+}]]]></java:args>
+			</java:invoke-static>
+			<try doc:name="Try" doc:id="aa8c884d-de71-4965-b25b-15255476b865" >
+				<rate-limiter:handle-429 doc:name="Handle 429" id="retries-exhausted" numberOfRetries="1" waitTimeExpression='#[(headers."retry-after-ms" default "0") as Number]'>
+				<ee:transform doc:name="set attributes" doc:id="6d09cb10-123c-4ced-86d8-ecdfc7b68035">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+						<ee:set-attributes><![CDATA[%dw 2.0 
+import java!de::codecentric::limiter::TestHttpResponseAttributesFactory
+output application/java
+---
+TestHttpResponseAttributesFactory::fetchAttributes()
+]]></ee:set-attributes>
+					</ee:message>
+				</ee:transform>
+		</rate-limiter:handle-429>
+				<set-payload value="MISSING EXCEPTION" doc:name="MISSING EXCEPTION" doc:id="e806ae94-8334-4b1e-a857-d410cccc4fbd" />
+				<error-handler >
+					<on-error-continue enableNotifications="false" logException="false" doc:name="RATE-LIMITER:RETRIES_EXHAUSTED" doc:id="46162bdb-470d-4804-8cf9-b298386521f0" type="RATE-LIMITER:RETRIES_EXHAUSTED" >
+						<set-payload value="EXPECTED EXCEPTION" doc:name="EXPECTED EXCEPTION" doc:id="2b6f1765-055d-4a6d-b671-1d9b423428c6" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name=" EXPECTED EXCEPTION" doc:id="39857ded-e95d-4fae-a3ea-12894ffd4162" message="Payload should contain EXPECTED EXCEPTION" expression="#[payload]" is='#[MunitTools::equalTo("EXPECTED EXCEPTION")]' />
 		</munit:validation>
 	</munit:test>
 
